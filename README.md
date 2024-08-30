@@ -1,4 +1,4 @@
-#Line Follower - GERM/UDESC
+# Line Follower - GERM/UDESC
 
 This project is developed by a group of electrical engineering and computer science students. 
 
