@@ -1,0 +1,57 @@
+Code:
+void loop() {
+  last_time=micros();
+  for(int i = 0; i < 6; i++)
+  {
+    sensor_read[i]=analogRead(sensor[i]);
+    sensor_average += sensor_read[i]*pesos[i]*1000;
+    sensor_sum += sensor_read[i];
+    current_time = micros();
+    Serial.printf("%d ", current_time-last_time);
+    last_time=micros();
+  }
+  Serial.println();
+}
+
+Output:
+48 46 46 44 45 45 
+44 46 46 45 44 45 
+46 47 50 45 44 45 
+44 46 46 45 45 45 
+48 46 46 45 44 45 
+44 46 46 44 45 45 
+
+__________________
+
+Code:
+void loop() {
+  last_time=micros();
+  for(i=0;i<4;i++){
+    for(int i = 0; i < 6; i++)
+    {
+      sensor_read[i]=analogRead(sensor[i]);
+      sensor_average += sensor_read[i]*pesos[i]*1000;
+      sensor_sum += sensor_read[i];    
+    }
+  }
+    current_time = micros();
+
+    Serial.println(current_time-last_time);
+}
+
+Output:
+1017
+1022
+1018
+1019
+1018
+1019
+1018
+1021
+
+___________________
+
+testar tempo de outra função de gpio
+testar tempo da nova estrutura (PIDv2) de leitura com chamas de micros()
+testar tempo do script completo (fazer alterações em uma nova branch)
+encoders

@@ -10,11 +10,12 @@ BluetoothSerial SerialBT;
 #define BIN2 19
 #define PWMB 21
 
+int n_samples=0, i=0, j=0;
+
 const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
 
-//speeds
 int rspeed;
 int lspeed;
 const int base_speed = 120;
@@ -32,25 +33,27 @@ float d;
 float lp;
 float error;
 float correction;
-float sp;
 
 float Kp = 0.8;
 float Ki = 0;
 float Kd = 1;
 
+//as the time is stored into unsigned long int variables, the program can run for nearly 70 minutes
+unsigned long current_time=0;
+unsigned long last_time=0;
+unsigned long current_sample=0;
+unsigned long last_sample=0;
+
 int pid_calc();
 void calc_turn();
-void motor_drive(int , int );
 
 void setup()
 {
   SerialBT.begin("LineFollower");
-  //sensors
   for(int i=0; i<n_sensores; i++){
     pinMode(sensor[i], INPUT);
   }
 
-  //motors
   pinMode(STBY, OUTPUT);
   pinMode(PWMA, OUTPUT);
   pinMode(PWMB, OUTPUT);
@@ -68,8 +71,15 @@ void setup()
   digitalWrite(BIN2, LOW); 
   
   Serial.begin(115200);
+
+//this for-loop will divide the weights for the total number of sensors
+//so the standard deviation is more quickly calculated
+//sdeviation = sqrt(sum(xi-mean)^2)/n
+//the division is done at the just once
+  for(i=0;i<n_sensores, i++){
+    pesos[i] = i/n_sensores;
+  }
   
-  sp = 0;
   analogWrite(PWMA, base_speed);
   analogWrite(PWMB, base_speed);
 }
@@ -77,15 +87,14 @@ void setup()
 
 void loop()
 {
-  atual = micros();
-  Serial.println(atual-anterior);
-  anterior = atual;
-  if (SerialBT.available()) {  // Check if Bluetooth data is available
-    String input = SerialBT.readString();  // Read the incoming data as a string
-    updatePIDConstants(input);  // Function to parse and update Kp, Ki, Kd
+  if (SerialBT.available()) {
+    String input = SerialBT.readString();
+    updatePIDConstants(input); 
   }
-  calc_turn();
-  delay(5);
+  current_time = micros();
+  if(current_time-last_time >= 4000){
+    calc_turn();
+  }
 }
 
 int pid_calc()
@@ -93,16 +102,28 @@ int pid_calc()
   sensor_average = 0;
   sensor_sum = 0;
 
-  for(int i = 0; i < 6; i++)
-  {
-    sensor_read[i]=analogRead(sensor[i]);
-    sensor_average += sensor_read[i]*pesos[i]*1000;
-    sensor_sum += sensor_read[i];
+  //the samplings shall be taken in a constant frequency
+  //to do so, each sample begin 500 microsseconds after the last
+  for(i=0;i<n_samples;i++){
+    current_sample = micros;
+    if (current_sample-last_sample >= 500)
+    {
+      for(j = 0; i < n_sensores; j++)
+      {
+        //reads each sensor individualy "n_samples" times
+        sensor_read[j] += analogRead(sensor[j]);
+      }
+    }
+    last_sample = current_sample;
   }
 
-  pos = int(sensor_average / sensor_sum);
+  for(i=0;i<n_sensores;i++){
+    //calculates the weighted standard deviation
+    //
+    //use the variable error
+    //
+  }
 
-  error = pos-sp;
   p = error;
   integral += p;
   integral = constrain(integral, integral_min, integral_max);
@@ -121,8 +142,14 @@ void calc_turn()
   rspeed = constrain(rspeed, 0, 255);
   lspeed = constrain(lspeed, 0, 255);
   
-  analogWrite(PWMA, rspeed);
-  analogWrite(PWMB, lspeed); 
+  //motor control discretization
+  //this condition keeps all the motor driver commands equaly spaced in time
+  current_time = micros();
+  if(current_time-last_sample >= 4000){
+    analogWrite(PWMA, rspeed);
+    analogWrite(PWMB, lspeed); 
+  }
+  last_time = current_time;
 }
 
 void updatePIDConstants(String input) {
