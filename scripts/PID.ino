@@ -20,23 +20,23 @@ int i=0, j=0;
 
 //array, number and weights of the front IR sensorss
 const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
-const int n_sensores = 6;
-int pesos[] = {-3, -2, -1, 1, 2, 3};
+const int n_sensors = 6;
+float wheight[] = {-3, -2, -1, 1, 2, 3};
 
 //right motor | left motor
 //base speed is one variable to be optimized
 int rspeed;
 int lspeed;
-const int base_speed = 120;
+const int base_speed = 100;
 
 //pos represents the robot's deviation from the line
 int pos = 0;
 
 //array to store the readings from the front IR sensors
 //the average is used to calculate the deviation
-int sensor_read[n_sensores];
-long sensor_average = 0;
-int sensor_sum = 0;
+int sensor_read[n_sensors];
+float sensor_wheighted_sum = 0;
+float sensor_sum = 0;
 
 //variables to be multiplied by kp, ki and kd
 float p;
@@ -69,7 +69,7 @@ void calc_turn();
 void setup()
 {
   SerialBT.begin("LineFollower");
-  for(int i=0; i<n_sensores; i++){
+  for(int i=0; i<n_sensors; i++){
     pinMode(sensor[i], INPUT);
   }
 
@@ -96,7 +96,7 @@ void setup()
 //sdeviation = sqrt(sum(xi-mean)^2)/n
 //the division is done at the just once
   for(i=0;i<n_sensores, i++){
-    pesos[i] = i/n_sensores;
+    wheight[i] = i/n_samples;
   }
   
   analogWrite(PWMA, base_speed);
@@ -124,8 +124,8 @@ int pid_calc()
   //the samplings shall be taken in a constant frequency
   //to do so, each sample begin 500 microsseconds after the last
   for(i=0;i<n_samples;i++){
-    current_sample = micros;
-    if (current_sample-last_sample >= 500)
+    current_sample_time = micros;
+    if (current_sample-last_sample_time >= 500)
     {
       for(j = 0; i < n_sensores; j++)
       {
@@ -133,17 +133,15 @@ int pid_calc()
         sensor_read[j] += analogRead(sensor[j]);
       }
     }
-    last_sample = current_sample;
+    last_sample_time = current_sample_time;
   }
 
-  for(i=0;i<n_sensores;i++){
-    //calculates the weighted standard deviation
-    //
-    //use the variable error
-    //
+  for(i=0;i<n_sensors;i++){
+    sensor_wheighted_sum+= sensor_read[i]*wheight[i];
+    sensor_sum += sensor_read[i];
   }
 
-  p = error;
+  p = sensor_wheighted_sum/sensor_sum;
   integral += p;
   integral = constrain(integral, integral_min, integral_max);
   d = p - lp;
