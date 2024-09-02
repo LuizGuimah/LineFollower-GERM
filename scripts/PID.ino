@@ -10,33 +10,52 @@ BluetoothSerial SerialBT;
 #define BIN2 19
 #define PWMB 21
 
-int n_samples=0, i=0, j=0;
+//number of samples to be taken in one sampling cycle
+//n_samples will be taken, then smoothed to be passed to the PID function
+//to be optimized
+int n_samples=4;
 
+//iterators
+int i=0, j=0;
+
+//array, number and weights of the front IR sensorss
 const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
 
+//right motor | left motor
+//base speed is one variable to be optimized
 int rspeed;
 int lspeed;
 const int base_speed = 120;
 
+//pos represents the robot's deviation from the line
 int pos = 0;
+
+//array to store the readings from the front IR sensors
+//the average is used to calculate the deviation
 int sensor_read[n_sensores];
 long sensor_average = 0;
 int sensor_sum = 0;
 
+//variables to be multiplied by kp, ki and kd
 float p;
 float integral;
-float integral_max = 1000;
-float integral_min = -1000;
 float d;
+
+//lp will store the last error
 float lp;
-float error;
+
+//correction stores the return from the PID function
 float correction;
 
+//multipliers to be optimized
 float Kp = 0.8;
 float Ki = 0;
 float Kd = 1;
+//limitants to the integral variable
+float integral_max = 1000;
+float integral_min = -1000;
 
 //as the time is stored into unsigned long int variables, the program can run for nearly 70 minutes
 unsigned long current_time=0;
@@ -139,6 +158,7 @@ void calc_turn()
   rspeed = base_speed - correction;
   lspeed = base_speed + correction;
   
+  //keep the pwm in this range
   rspeed = constrain(rspeed, 0, 255);
   lspeed = constrain(lspeed, 0, 255);
   
