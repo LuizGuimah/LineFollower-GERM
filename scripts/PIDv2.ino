@@ -117,22 +117,25 @@ int pid_calc()
 {
   sensor_wheighted_sum = 0;
   sensor_sum = 0;
+  for(i = 0; i < n_sensors; i++){
+    sensor_read[i] = 0;
+  }
 
   current_time = micros();
   while(current_time - last_sample_time < 8000){current_time = micros();}
   //the samplings shall be taken in a constant frequency
   //to do so, each sample begin 500 microsseconds after the last
   for(i=0;i<n_samples;i++){
-      current_sample_time = micros();
-      while(current_time-last_sample_time < 500){current_sample_time = micros();}
-      for(j = 0; j < n_sensors; j++)
-      {
-        //reads each sensor individualy "n_samples" times
-        sensor_read[j] += analogRead(sensor[j]);
-        Serial.print(sensor_read[j]);
-        Serial.print("  ");
-      }
-      Serial.println();
+    current_sample_time = micros();
+    while(current_sample_time-last_sample_time < 500){current_sample_time = micros();}
+    for(j = 0; j < n_sensors; j++)
+    {
+      //reads each sensor individualy "n_samples" times
+      sensor_read[j] += analogRead(sensor[j]);
+      Serial.print(sensor_read[j]);
+      Serial.print("  ");
+    }
+    Serial.println();
     last_sample_time = current_sample_time;
   }
 
@@ -140,13 +143,16 @@ int pid_calc()
     sensor_wheighted_sum += sensor_read[i]*wheight[i];
     sensor_sum += sensor_read[i]/n_sensors;
   }
-
+  Serial.println(sensor_wheighted_sum);
+  Serial.println(sensor_sum);
   p = sensor_wheighted_sum/sensor_sum;
-  Serial.println(p);
   integral += p;
   integral = constrain(integral, integral_min, integral_max);
   d = p - lp;
   lp = p;
+  Serial.println(p);
+  Serial.println(integral);
+  Serial.println(d);
 
   return  int(Kp*p + Ki*integral + Kd*d);
 }
@@ -177,6 +183,7 @@ void calc_turn()
   analogWrite(PWMA, rspeed);
   analogWrite(PWMB, lspeed); 
   last_time = current_time;
+  Serial.println();
 }
 
 void updatePIDConstants(String input) {
