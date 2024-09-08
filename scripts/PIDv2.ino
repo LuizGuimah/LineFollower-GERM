@@ -1,4 +1,4 @@
-#include <BluetoothSerial.h>;
+#include <BluetoothSerial.h>
 
 BluetoothSerial SerialBT;
 
@@ -91,10 +91,8 @@ void setup()
   
   Serial.begin(115200);
 
-//this for-loop will divide the weights for the total number of sensors
-//so the standard deviation is more quickly calculated
-//sdeviation = sqrt(sum(xi-mean)^2)/n
-//the division is done at the just once
+//this for-loop will divide the weights for the total number of samples
+//no need for calculating the average
   for(i=0;i<n_sensors; i++){
     wheight[i] = i/n_samples;
   }
@@ -111,7 +109,7 @@ void loop()
     updatePIDConstants(input); 
   }
   current_time = micros();
-  while(current_time - last_sample_time < 10000){}
+  
   calc_turn();
 }
 
@@ -120,12 +118,13 @@ int pid_calc()
   sensor_wheighted_sum = 0;
   sensor_sum = 0;
 
+  current_time = micros();
+  while(current_time - last_sample_time < 8000){current_time = micros();}
   //the samplings shall be taken in a constant frequency
   //to do so, each sample begin 500 microsseconds after the last
   for(i=0;i<n_samples;i++){
-    current_sample_time = micros();
-      while(current_time-last_sample_time < 500){
-    }
+      current_sample_time = micros();
+      while(current_time-last_sample_time < 500){current_sample_time = micros();}
       for(j = 0; j < n_sensors; j++)
       {
         //reads each sensor individualy "n_samples" times
@@ -138,12 +137,12 @@ int pid_calc()
   }
 
   for(i=0;i<n_sensors;i++){
-    sensor_wheighted_sum+= sensor_read[i]*wheight[i];
-    sensor_sum += sensor_read[i];
+    sensor_wheighted_sum += sensor_read[i]*wheight[i];
+    sensor_sum += sensor_read[i]/n_sensors;
   }
+
   p = sensor_wheighted_sum/sensor_sum;
-  Serial.print(p);
-  Serial.println();
+  Serial.println(p);
   integral += p;
   integral = constrain(integral, integral_min, integral_max);
   d = p - lp;
@@ -155,6 +154,7 @@ int pid_calc()
 void calc_turn()
 {
   correction = pid_calc();
+  Serial.prinln(correction);
   rspeed = base_speed - correction;
   lspeed = base_speed + correction;
   Serial.print(lspeed);
@@ -165,12 +165,15 @@ void calc_turn()
   //keep the pwm in this range
   rspeed = constrain(rspeed, 0, 255);
   lspeed = constrain(lspeed, 0, 255);
+  Serial.print(lspeed);
+  Serial.print("  ");
+  Serial.print(rspeed);
+  Serial.println();
   
   //motor control discretization
   //this condition keeps all the motor driver commands equaly spaced in time
   current_time = micros();
-  while(current_time-last_sample_time < 8000){
-  }
+  while(current_time-last_time < 10000){current_time = micros();}
   analogWrite(PWMA, rspeed);
   analogWrite(PWMB, lspeed); 
   last_time = current_time;
