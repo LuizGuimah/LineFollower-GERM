@@ -11,6 +11,7 @@ BluetoothSerial SerialBT;
 #define PWMB 21
 
 const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
+const unsigned int sensorLat[] = {13, 14, 34, 39};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
 
