@@ -14,7 +14,7 @@ const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
 const unsigned int sensorLat[] = {13, 14, 34, 39};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
-
+int cont = 0;
 //speeds
 int rspeed;
 int lspeed;
@@ -85,6 +85,17 @@ void loop()
     String input = SerialBT.readString();  // Read the incoming data as a string
     updatePIDConstants(input);  // Function to parse and update Kp, Ki, Kd
   }
+
+  if(cont < 2){
+    if(analogRead(34) < 1000|| analogRead(39) < 1000 && analogRead(13) > 1000 || analogRead(14) > 1000){
+    //direito com linha e esquerdo não
+      cont++;
+    }
+  } else {
+     analogWrite(PWMA, 0);
+     analogWrite(PWMB, 0);
+  }
+  
   calc_turn();
   delay(5);
 }
@@ -124,6 +135,7 @@ void calc_turn()
   
   analogWrite(PWMA, rspeed);
   analogWrite(PWMB, lspeed); 
+
 }
 
 void updatePIDConstants(String input) {
