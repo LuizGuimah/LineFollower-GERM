@@ -92,10 +92,10 @@ void loop()
       cont++;
     }
   } else {
+     delay(100);
      analogWrite(PWMA, 0);
      analogWrite(PWMB, 0);
   }
-  
   calc_turn();
   delay(5);
 }
