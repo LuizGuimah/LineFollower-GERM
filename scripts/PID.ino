@@ -15,6 +15,7 @@ const unsigned int sensorLat[] = {13, 14, 34, 39};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
 int cont = 0;
+int cont_curva = 0;
 //speeds
 int rspeed;
 int lspeed;
@@ -96,6 +97,18 @@ void loop()
      analogWrite(PWMA, 0);
      analogWrite(PWMB, 0);
   }
+  /*
+  while(cont_curva < 2){
+    if(analogRead(34) > 1000|| analogRead(39) > 1000 && analogRead(13) < 1000 || analogRead(14) < 1000){
+      //se houver só linha na esquerda
+      analogWrite(PWMA, rspeed * 0.5);
+      analogWrite(PWMB, lspeed * 0.5);
+      cont_curva ++;
+    }
+  }
+  */
+  
+  
   calc_turn();
   delay(5);
 }
