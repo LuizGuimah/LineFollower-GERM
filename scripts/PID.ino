@@ -14,14 +14,12 @@ const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
 const unsigned int sensorLat[] = {13, 14, 34, 39};
 const int n_sensores = 6;
 int pesos[] = {-3, -2, -1, 1, 2, 3};
-int cont = 0;
-int cont_curva = 0;
+
 //speeds
 int rspeed;
 int lspeed;
-int base_speed = 120;
-long atual;
-long anterior;
+const int base_speed = 100;
+
 int pos = 0;
 int sensor_read[n_sensores];
 long sensor_average = 0;
@@ -37,17 +35,16 @@ float error;
 float correction;
 float sp;
 
-float Kp = 0.8;
-float Ki = 0;
-float Kd = 1;
-
+float Kp = 2.4;
+float Ki = 0.002;
+float Kd = 7;
+int cont;
 int pid_calc();
 void calc_turn();
 void motor_drive(int , int );
 
 void setup()
 {
-  
   SerialBT.begin("LineFollower");
   //sensors
   for(int i=0; i<n_sensores; i++){
@@ -71,7 +68,7 @@ void setup()
   digitalWrite(BIN1, HIGH);
   digitalWrite(BIN2, LOW); 
   
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   sp = 0;
   analogWrite(PWMA, base_speed);
@@ -81,45 +78,29 @@ void setup()
 
 void loop()
 {
-  atual = micros();
+  //atual = micros();
   //Serial.println(atual-anterior);
-  anterior = atual;
+  //anterior = atual;
   if (SerialBT.available()) {  // Check if Bluetooth data is available
     String input = SerialBT.readString();  // Read the incoming data as a string
     updatePIDConstants(input);  // Function to parse and update Kp, Ki, Kd
   }
-  
-  //Serial.println(analogRead(14));
-  Serial.println(analogRead(14));
-  //Serial.println(cont);
+  Serial.println(cont);
+  Serial.println(analogRead(39));
   if(cont < 2){
     calc_turn();
     delay(5);
-    if(analogRead(34) < 1000|| analogRead(39) < 1000){
-    //direito com linha e esquerdo não
-      
+    
+    if(analogRead(34) < 3500|| analogRead(39) < 3500){
+    //direito com linha e esquerdo não  
       cont++;
-      delay(500);
+      
     }
   } else {
-    //Serial.println("Entrando no else");
-     delay(100);
-  analogWrite(PWMA, 0);
+    
+    analogWrite(PWMA, 0);
     analogWrite(PWMB, 0); 
   }
-
-/*
-  if(cont_curva < 2){
-    if(analogRead(34) > 1000|| analogRead(39) > 1000 && analogRead(13) < 1000 || analogRead(14) < 1000){
-      //se houver só linha na esquerda
-      analogWrite(PWMA, rspeed * 0.5);
-      analogWrite(PWMB, lspeed * 0.5);
-      cont_curva ++;
-    } 
-  } else {
-    cont_curva = 0;
-  }
-  */
   
 }
 
@@ -158,7 +139,6 @@ void calc_turn()
   
   analogWrite(PWMA, rspeed);
   analogWrite(PWMB, lspeed); 
-
 }
 
 void updatePIDConstants(String input) {
