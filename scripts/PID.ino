@@ -38,7 +38,7 @@ float sp;
 float Kp = 2.4;
 float Ki = 0.002;
 float Kd = 7;
-int cont;
+int cont, estado = 0;
 int pid_calc();
 void calc_turn();
 void motor_drive(int , int );
@@ -87,6 +87,31 @@ void loop()
   }
   Serial.println(cont);
   Serial.println(analogRead(39));
+  
+  switch (estado){
+    case 0:
+      calc_turn();
+      delay(5);
+      if (analogRead(34) < 3500|| analogRead(39) < 3500)
+        estado++;
+      break;
+    case 1:
+      calc_turn();
+      delay(5);
+      if (analogRead(34) > 3500|| analogRead(39) > 3500)
+        estado ++;
+      break;
+    case 2:
+      calc_turn();
+      delay(5);
+      if (analogRead(34) < 3500|| analogRead(39) < 3500)
+        estado++;
+      break; 
+    case 3:
+      analogWrite(PWMA, 0);
+      analogWrite(PWMB, 0); 
+  }
+  /*
   if(cont < 2){
     calc_turn();
     delay(5);
@@ -101,7 +126,7 @@ void loop()
     analogWrite(PWMA, 0);
     analogWrite(PWMB, 0); 
   }
-  
+  */
 }
 
 int pid_calc()
