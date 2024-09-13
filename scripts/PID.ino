@@ -10,10 +10,10 @@ BluetoothSerial SerialBT;
 #define BIN2 19
 #define PWMB 21
 
-const unsigned int sensor[] = {27, 26, 25, 33, 32, 35};
+const unsigned int sensor[] = {27, 26, 25, 33, 32, 35, 15, 36};
 const unsigned int sensorLat[] = {13, 14, 34, 39};
-const int n_sensores = 6;
-int pesos[] = {-3, -2, -1, 1, 2, 3};
+const int n_sensores = 8;
+int pesos[] = {-4, -3, -2, -1, 1, 2, 3, 4};
 
 //speeds
 int rspeed;
@@ -134,7 +134,7 @@ int pid_calc()
   sensor_average = 0;
   sensor_sum = 0;
 
-  for(int i = 0; i < 6; i++)
+  for(int i = 0; i < n_sensores; i++)
   {
     sensor_read[i]=analogRead(sensor[i]);
     sensor_average += sensor_read[i]*pesos[i]*1000;
