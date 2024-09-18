@@ -28,8 +28,8 @@ int r_read=0;
 
 float p;
 float integral;
-float integral_max = 1000;
-float integral_min = -1000;
+float integral_max = 5000;
+float integral_min = -5000;
 float d;
 float lp;
 float error;
@@ -93,8 +93,6 @@ void loop()
   //1 if reading white
   //0 if reading black
   r_read = analogRead(39) < 3500;
-  Serial.println(r_read);
-  Serial.println(state);
   switch (state){
     case 0:
       calc_turn();
@@ -120,7 +118,7 @@ void loop()
       state=0;
       break;
   }
-  delay(15);
+  delay(10);
 }
 
 int pid_calc()
@@ -131,7 +129,7 @@ int pid_calc()
   for(int i = 0; i < n_sensores; i++)
   {
     sensor_read[i]=analogRead(sensor[i]);
-    sensor_average += sensor_read[i]*pesos[i]*1000;
+    sensor_average += sensor_read[i]*pesos[i]*100;
     sensor_sum += sensor_read[i];
   }
 
@@ -143,7 +141,7 @@ int pid_calc()
   integral = constrain(integral, integral_min, integral_max);
   d = p - lp;
   lp = p;
-
+  
   return  int(Kp*p + Ki*integral + Kd*d);
 }
 
@@ -184,3 +182,4 @@ void updatePIDConstants(String input) {
   } else {
     SerialBT.println("Formato invalido! Esperado: Kp=0.5,Ki=0.0003,Kd=0.6");
   }
+}
