@@ -25,6 +25,8 @@ int sensor_read[n_sensores];
 long sensor_average = 0;
 int sensor_sum = 0;
 int r_read=0;
+int l_read=0;
+int aux = 0, atual = 0;
 
 float p;
 float integral;
@@ -92,8 +94,46 @@ void loop()
   //boolean value
   //1 if reading white
   //0 if reading black
-  Serial.println(analogRead(13));
-  r_read = analogRead(13) == 4095;
+
+
+
+if (analogRead(39) < 3500){//se o da direita ler branco
+  
+  if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
+    atual = millis();
+  }
+}
+
+Serial.println()
+
+if (millis() - atual >= 1000){
+    if(aux == 0){
+      atual = 0;
+      estado ++;
+      
+    }else{
+      aux = 0;
+      atual = 0;
+    }
+  }else{
+    if(analogRead(13) > 2000)//se o da esquerda ler branco, salva isso
+      aux = 1;
+  }
+
+
+
+
+/*
+é só fazer a lógica reversa: se o da direita ler branco e o da esquerda tbm: estado --;
+
+
+
+
+*/
+int aux = 0;
+ 
+  r_read = analogRead(39) <= 2000;
+  l_read = analogRead(13) <= 2000;
   switch (state){
     case 0:
       calc_turn();
@@ -102,13 +142,19 @@ void loop()
       break;
     case 1:
       calc_turn();
+      if (l_read)
+        state--;
       if (!r_read)
         state++;
+      
       break;
     case 2:
       calc_turn();
+      if (l_read)
+        state--;
       if (r_read)
         state++;
+      
       break; 
     case 3:
       analogWrite(PWMA, 0);
