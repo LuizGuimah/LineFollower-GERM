@@ -18,17 +18,20 @@ int pesos[] = {-4, -3, -2, -1, 1, 2, 3, 4};
 //speeds
 int rspeed;
 int lspeed;
-const int base_speed = 100;
+const int base_speed = 80;
 
 int pos = 0;
 int sensor_read[n_sensores];
 long sensor_average = 0;
 int sensor_sum = 0;
+int r_read=0;
+int l_read=0;
+int aux = 0, atual = 0;
 
 float p;
 float integral;
-float integral_max = 1000;
-float integral_min = -1000;
+float integral_max = 5000;
+float integral_min = -5000;
 float d;
 float lp;
 float error;
@@ -38,10 +41,9 @@ float sp;
 float Kp = 2.4;
 float Ki = 0.002;
 float Kd = 7;
-int cont, estado = 0;
+int state = 0;
 int pid_calc();
 void calc_turn();
-void motor_drive(int , int );
 
 void setup()
 {
@@ -71,6 +73,10 @@ void setup()
   Serial.begin(115200);
   
   sp = 0;
+  while(!SerialBT.available()) {delay(10);}
+  String input = SerialBT.readString();  // Read the incoming data as a string
+  updatePIDConstants(input); 
+
   analogWrite(PWMA, base_speed);
   analogWrite(PWMB, base_speed);
 }
@@ -85,48 +91,102 @@ void loop()
     String input = SerialBT.readString();  // Read the incoming data as a string
     updatePIDConstants(input);  // Function to parse and update Kp, Ki, Kd
   }
-  Serial.println(cont);
-  Serial.println(analogRead(39));
-  
-  switch (estado){
+  //boolean value
+  //1 if reading white
+  //0 if reading black
+  Serial.print("state: ");
+  Serial.print(state);
+  Serial.print("\taux: ");
+  Serial.print(aux);
+  Serial.print("\tesquerdo: ");
+  Serial.print(analogRead(13));
+  Serial.print("\tdireito: ");
+  Serial.print(analogRead(39));
+  Serial.print("\tatual: ");
+  Serial.println(atual);
+ 
+  r_read = analogRead(39) <= 2000;
+
+  switch (state){
     case 0:
       calc_turn();
-      delay(5);
-      if (analogRead(34) < 3500|| analogRead(39) < 3500)
-        estado++;
+      
+      if (analogRead(39) < 3500){//se o da direita ler branco
+  
+        if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
+          atual = millis();
+        }
+      }
+
+      if(atual != 0){
+
+        if (millis() - atual >= 1000){
+          if(aux == 0){
+
+          atual = 0;
+          state ++;
+          }else{
+
+          aux = 0;
+          atual = 0;
+          }
+        }else{
+
+          if(analogRead(13) < 2000){//se o da esquerda ler branco, salva isso
+            aux = 1;
+          }
+        }
+      }
+
       break;
     case 1:
       calc_turn();
-      delay(5);
-      if (analogRead(34) > 3500|| analogRead(39) > 3500)
-        estado ++;
+
+      if (!r_read)
+        state++;
+
       break;
     case 2:
       calc_turn();
-      delay(5);
-      if (analogRead(34) < 3500|| analogRead(39) < 3500)
-        estado++;
-      break; 
+      
+      
+        if (analogRead(39) < 2000){//se o da direita ler branco
+    
+          if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
+            atual = millis();
+          }
+        }
+
+      if(atual != 0){
+        if (millis() - atual >= 1000){
+          if(aux == 0){
+
+          atual = 0;
+          state ++;
+          }else{
+
+          aux = 0;
+          atual = 0;
+          }
+        }else{
+
+          if(analogRead(13) < 2000){//se o da esquerda ler branco, salva isso
+            aux = 1;
+          }
+        }
+      }
+
+      break;
     case 3:
       analogWrite(PWMA, 0);
-      analogWrite(PWMB, 0); 
+      analogWrite(PWMB, 0);
+      while(!SerialBT.available()) {delay(10);}
+      String input = SerialBT.readString();  // Read the incoming data as a string
+      updatePIDConstants(input);
+      state=0;
+      break;
   }
-  /*
-  if(cont < 2){
-    calc_turn();
-    delay(5);
-    
-    if(analogRead(34) < 3500|| analogRead(39) < 3500){
-    //direito com linha e esquerdo não  
-      cont++;
-      
-    }
-  } else {
-    
-    analogWrite(PWMA, 0);
-    analogWrite(PWMB, 0); 
-  }
-  */
+  delay(10);
 }
 
 int pid_calc()
@@ -137,7 +197,7 @@ int pid_calc()
   for(int i = 0; i < n_sensores; i++)
   {
     sensor_read[i]=analogRead(sensor[i]);
-    sensor_average += sensor_read[i]*pesos[i]*1000;
+    sensor_average += sensor_read[i]*pesos[i]*100;
     sensor_sum += sensor_read[i];
   }
 
@@ -149,7 +209,7 @@ int pid_calc()
   integral = constrain(integral, integral_min, integral_max);
   d = p - lp;
   lp = p;
-
+  
   return  int(Kp*p + Ki*integral + Kd*d);
 }
 
