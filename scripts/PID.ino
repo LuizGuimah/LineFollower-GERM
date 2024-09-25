@@ -1,4 +1,4 @@
-#include <BluetoothSerial.h>;
+#include <BluetoothSerial.h>
 
 BluetoothSerial SerialBT;
 
@@ -10,8 +10,8 @@ BluetoothSerial SerialBT;
 #define BIN2 19
 #define PWMB 21
 
-const unsigned int sensor[] = {27, 26, 25, 33, 32, 35, 15, 36};
-const unsigned int sensorLat[] = {13, 14, 34, 39};
+const unsigned int sensor[] = {34, 35, 32, 33, 25, 26, 27, 14};
+const unsigned int sensorLat[] = {13, 36, 39};
 const int n_sensores = 8;
 int pesos[] = {-4, -3, -2, -1, 1, 2, 3, 4};
 
@@ -52,7 +52,7 @@ void setup()
   for(int i=0; i<n_sensores; i++){
     pinMode(sensor[i], INPUT);
   }
-
+  atual = 0;
   //motors
   pinMode(STBY, OUTPUT);
   pinMode(PWMA, OUTPUT);
@@ -84,9 +84,7 @@ void setup()
 
 void loop()
 {
-  //atual = micros();
-  //Serial.println(atual-anterior);
-  //anterior = atual;
+  
   if (SerialBT.available()) {  // Check if Bluetooth data is available
     String input = SerialBT.readString();  // Read the incoming data as a string
     updatePIDConstants(input);  // Function to parse and update Kp, Ki, Kd
@@ -111,7 +109,7 @@ void loop()
     case 0:
       calc_turn();
       
-      if (analogRead(39) < 3500){//se o da direita ler branco
+      if (analogRead(39) < 2000 || analogRead(13)<1000){//se o da direita ler branco
   
         if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
           atual = millis();
@@ -120,7 +118,7 @@ void loop()
 
       if(atual != 0){
 
-        if (millis() - atual >= 1000){
+        if (millis() - atual >= 300){
           if(aux == 0){
 
           atual = 0;
@@ -150,7 +148,7 @@ void loop()
       calc_turn();
       
       
-        if (analogRead(39) < 2000){//se o da direita ler branco
+        if (analogRead(39) < 2000 || analogRead(13)<1000){//se o da direita ler branco
     
           if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
             atual = millis();
@@ -158,7 +156,7 @@ void loop()
         }
 
       if(atual != 0){
-        if (millis() - atual >= 1000){
+        if (millis() - atual >= 300){
           if(aux == 0){
 
           atual = 0;
