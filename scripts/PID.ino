@@ -104,12 +104,12 @@ void loop()
   Serial.println(atual);
  
   r_read = analogRead(39) <= 2000;
-
+  l_read = analogRead(13) <= 1000;
   switch (state){
     case 0:
       calc_turn();
       
-      if (analogRead(39) < 2000 || analogRead(13)<1000){//se o da direita ler branco
+      if (r_read || l_read){//se o da direita ler branco
   
         if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
           atual = millis();
@@ -130,7 +130,7 @@ void loop()
           }
         }else{
 
-          if(analogRead(13) < 2000){//se o da esquerda ler branco, salva isso
+          if(l_read < 2000){//se o da esquerda ler branco, salva isso
             aux = 1;
           }
         }
@@ -148,7 +148,7 @@ void loop()
       calc_turn();
       
       
-        if (analogRead(39) < 2000 || analogRead(13)<1000){//se o da direita ler branco
+        if (r_read || l_read){//se o da direita ler branco
     
           if(atual == 0){//se for a primeira vez que o da direita leu branco, salva como referencia para subtrair depois
             atual = millis();
@@ -168,7 +168,7 @@ void loop()
           }
         }else{
 
-          if(analogRead(13) < 2000){//se o da esquerda ler branco, salva isso
+          if(l_read){//se o da esquerda ler branco, salva isso
             aux = 1;
           }
         }
